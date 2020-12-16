@@ -6,15 +6,18 @@ namespace LPO_SAPR
     {
         static void Main(string[] args)
         {
-            ArsVector<int> vector = new ArsVector<int>();
+            ArsVector<int> vector = new ArsVector<int>(0, 9);
             if (vector != null)
                 Console.WriteLine("Вектор создан!");
 
-            vector.Append(25);
+            for (int i = 0; i < vector.Length(); i++)
+                vector[i] = (i + 1)*3;
 
-            Console.WriteLine(vector[0]);
 
-            Console.WriteLine(vector.Length());
+            for (int i = 0; i < vector.Length(); i++)
+                Console.WriteLine(vector[i]);
+
+            Console.WriteLine("Длина: {0}", vector.Length());
 
             Console.ReadLine();
         }
