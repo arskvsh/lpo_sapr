@@ -75,13 +75,19 @@ namespace LPO_SAPR
             return n - m + 1;
         }
 
-        public int GetLastIndex()
+        public int GetFirstIndex
         {
-            return n;
+            get
+            {
+                return m;
+            }
         }
-        public int GetFirstIndex()
+        public int GetLastIndex
         {
-            return m;
+            get
+            {
+                return n;
+            }
         }
 
         //метод, позволяющий найти индекс первого включения некоторого искомого значения

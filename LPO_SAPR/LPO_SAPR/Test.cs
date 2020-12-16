@@ -27,19 +27,19 @@ namespace LPO_SAPR
             //выведем на экран длину вектора
             Console.WriteLine("Длина вектора: " + vector.Length());
             //выведем на экран индекс первого элемента
-            Console.WriteLine(vector.GetFirstIndex());
+            Console.WriteLine(vector.GetFirstIndex);
             //выведем на экран индекс последнего элемента
-            Console.WriteLine(vector.GetLastIndex());
+            Console.WriteLine(vector.GetLastIndex);
 
             //заполним вектор возрастающей последовательностью чисел, кратных 3 и выведем их на экран
-            for (int i = 0; i < vector.Length(); i++)
+            for (int i = vector.GetFirstIndex; i < (vector.GetFirstIndex + vector.Length()); i++)
             {
                 vector[i] = (i + 1) * 3;
                 Console.Write(vector[i] + " ");
             }
 
             //заменим элемент с индексом 5 и выведем его на экран
-            vector[5] = 65576;
+            vector[5] = 30;
             Console.WriteLine("\nЗаменили элемент 5 на " + vector[5]);
 
             Console.WriteLine();
