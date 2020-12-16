@@ -69,7 +69,7 @@ namespace LPO_SAPR
 
         public void Append(T input) //функция, добавляющая новый элемент в конец вектора
         {
-            data[n++] = input;
+            data[n] = input;
         }
 
         public int Length()
