@@ -1,0 +1,6 @@
+A:\hobby\vuz\lpo\PR1\VectorCsharp\VectorCSharp\obj\Debug\VectorCSharp.csprojAssemblyReference.cache
+A:\hobby\vuz\lpo\PR1\VectorCsharp\VectorCSharp\obj\Debug\VectorCSharp.csproj.CoreCompileInputs.cache
+A:\hobby\vuz\lpo\PR1\VectorCsharp\VectorCSharp\bin\Debug\VectorCSharp.exe
+A:\hobby\vuz\lpo\PR1\VectorCsharp\VectorCSharp\bin\Debug\VectorCSharp.pdb
+A:\hobby\vuz\lpo\PR1\VectorCsharp\VectorCSharp\obj\Debug\VectorCSharp.exe
+A:\hobby\vuz\lpo\PR1\VectorCsharp\VectorCSharp\obj\Debug\VectorCSharp.pdb
