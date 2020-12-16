@@ -15,8 +15,9 @@ namespace LPO_SAPR
 
 
             for (int i = 0; i < vector.Length(); i++)
-                Console.WriteLine(vector[i]);
+                Console.Write(vector[i] + " ");
 
+            Console.WriteLine();
             Console.WriteLine("Длина: {0}", vector.Length());
 
             Console.ReadLine();
