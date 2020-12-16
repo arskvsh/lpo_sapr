@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace VectorCSharp
+namespace LPO_SAPR
 {
     //Реализация структуры хранения данных ВЕКТОР (динамический массив)
     //Арсений Ковешников, БИВТ-18-3

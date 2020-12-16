@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace VectorCSharp
+namespace LPO_SAPR
 {
     public class Test
     {
