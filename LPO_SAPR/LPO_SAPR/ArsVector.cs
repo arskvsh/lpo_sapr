@@ -18,7 +18,7 @@ namespace LPO_SAPR
         private int m; //индекс первого элемента
         private int n; //индекс последнего элемента
 
-        private int size; //техническое поле для хранения размера памяти, которая зарезервирована под вектор
+        private int capacity; //техническое поле "вместимость" для хранения размера памяти, которая зарезервирована под вектор
         private const int DEF_SIZE = 5; //константа для задания стандартного размера резерва памяти под вектор
         private const int SIZE_MULT = 2; //константа для хранения множителя расширения резерва памяти
 
@@ -27,7 +27,7 @@ namespace LPO_SAPR
         {
             fixed (T* setData = new T[DEF_SIZE]) //фиксируем ссылку на участок памяти длиной DEF_SIZE (резервируем память под вектор)
             {
-                size = DEF_SIZE; //запоминаем длину зарезервированного участка памяти
+                capacity = DEF_SIZE; //запоминаем длину зарезервированного участка памяти
                 data = setData; //вносим полученные данные по адресу поля для хранения данных
                 m = 0; //задаём индекс первого элемента как 0
                 n = -1; //задаём индекс последнего элемента как -1, поскольку вектор пока пустой
@@ -53,15 +53,13 @@ namespace LPO_SAPR
                     throw new IndexOutOfRangeException();
                 }
 
-                n = index;
-
                 data[index] = value;
             }
         }
 
         private void expandSize()
         {
-            fixed (T* setData = new T[size * SIZE_MULT]) //фиксируем ссылку на участок памяти длиной DEF_SIZE (резервируем память под вектор)
+            fixed (T* setData = new T[capacity * SIZE_MULT]) //фиксируем ссылку на участок памяти длиной DEF_SIZE (резервируем память под вектор)
             {
                 T* _data = data;
             }
@@ -69,7 +67,7 @@ namespace LPO_SAPR
 
         public void Append(T input) //функция, добавляющая новый элемент в конец вектора
         {
-            data[n] = input;
+            data[n++] = input;
         }
 
         public int Length()
