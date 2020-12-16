@@ -27,9 +27,9 @@ namespace LPO_SAPR
             //выведем на экран длину вектора
             Console.WriteLine("Длина вектора: " + vector.Length());
             //выведем на экран индекс первого элемента
-            Console.WriteLine(vector.GetFirstIndex);
+            Console.WriteLine("Индекс первого элемента: " + vector.GetFirstIndex);
             //выведем на экран индекс последнего элемента
-            Console.WriteLine(vector.GetLastIndex);
+            Console.WriteLine("Индекс последнего элемента: " + vector.GetLastIndex);
 
             //заполним вектор возрастающей последовательностью чисел, кратных 3 и выведем их на экран
             for (int i = vector.GetFirstIndex; i < (vector.GetFirstIndex + vector.Length()); i++)
@@ -38,9 +38,16 @@ namespace LPO_SAPR
                 Console.Write(vector[i] + " ");
             }
 
-            //заменим элемент с индексом 5 и выведем его на экран
+            //заменим элемент с индексом 5 и снова выведем массив на экран
             vector[5] = 30;
             Console.WriteLine("\nЗаменили элемент 5 на " + vector[5]);
+            for (int i = vector.GetFirstIndex; i < (vector.GetFirstIndex + vector.Length()); i++)
+            {
+                Console.Write(vector[i] + " ");
+            }
+
+            //попробуем найти индекс первого включения элемента 30
+            Console.WriteLine("\nИндекс первого включения 30 есть " + vector.IndexOf(30));
 
             Console.WriteLine();
 

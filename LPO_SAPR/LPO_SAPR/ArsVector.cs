@@ -22,7 +22,7 @@ namespace LPO_SAPR
         //конструктор класса
         public ArsVector(int _m, int _n)
         {
-            if(_m <= _n)//проверяем, что индекс последнего элемента больше индекса первого, иначе выбрасываем ошибку
+            if (_m <= _n)//проверяем, что индекс последнего элемента больше индекса первого, иначе выбрасываем ошибку
             {
                 data = (T*)Marshal.AllocHGlobal(sizeof(T) * (_n - _m + 1));
                 //вручную выделяем (длина элемента * кол-во элементов) памяти и сохраняем ссылку на выделенный участок памяти в поле для хранения указателя на вектор в дескрипторе
@@ -69,12 +69,13 @@ namespace LPO_SAPR
             }
         }
 
-        //метод, возвращающий длину вектора
+        //функция, возвращающая длину вектора
         public int Length()
         {
             return n - m + 1;
         }
 
+        //свойство, возвращающее значение индекса первого элемента
         public int GetFirstIndex
         {
             get
@@ -82,6 +83,8 @@ namespace LPO_SAPR
                 return m;
             }
         }
+
+        //свойство, возвращающее значение индекса последнего элемента
         public int GetLastIndex
         {
             get
@@ -90,19 +93,20 @@ namespace LPO_SAPR
             }
         }
 
-        //метод, позволяющий найти индекс первого включения некоторого искомого значения
-        /*public void IndexOf(T itemToSearch)
+        //функция, возвращающая индекс первого включения некоторого искомого значения
+        public int IndexOf(T itemToSearch)
         {
             int foundIndex = Int32.MinValue;
-            int i = m;
-
-            while (!this[i].Equals(itemToSearch))
+            for (int i = this.m; i < (this.n - this.m + 1); i++)
             {
-                if ()
-                    
+                if(itemToSearch.Equals(this[i]))
+                {
+                    foundIndex = i;
+                    break;
+                }
             }
 
-            return
-        }*/
+            return foundIndex;
+        }
     }
 }
