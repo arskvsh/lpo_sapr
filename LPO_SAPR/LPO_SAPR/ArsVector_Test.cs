@@ -3,9 +3,9 @@ using System.Text;
 
 namespace LPO_SAPR
 {
-    public class Test
+    public class ArsVector_Test
     {
-        static void Main(string[] args)
+        static void Start(string[] args)
         {
             //инициализируем вектор целочисленного типа с индексом первого элемента 0 и последнего 9
             ArsVector<int> vector = new ArsVector<int>(0, 9);
