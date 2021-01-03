@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Runtime.InteropServices;
+using System.ComponentModel.Design.Serialization;
 
 namespace LPO_SAPR
 {
@@ -13,7 +14,7 @@ namespace LPO_SAPR
         public struct Record
         {
             private int lptr; //левый указатель - индекс массива
-            private T keyvalue; //поле ключ+данные, у меня будет строкового типа
+            private T keyvalue; //поле ключ+данные
             private int rptr; //правый указатель - индекс массива
 
             //интерфейс для обращения к полю хранения левого указателя
@@ -38,7 +39,7 @@ namespace LPO_SAPR
             }
         }
 
-        private Record[] records; //поле хранения записей
+        private Record[] table; //поле хранения записей
         //private object[] recordz; //поле хранения записей
 
         //конструктор древовидной таблицы
@@ -51,64 +52,89 @@ namespace LPO_SAPR
             //подсчитаем полную длину таблицы с учётом места под технические записи
             int total_length = _length + 3;
 
-            records = new Record[total_length]; //инициализируем массив
+            table = new Record[total_length]; //инициализируем массив
 
-            //обнуляем все левые указатели и опустошаем поля данных
+            //обнуляем все левые указатели и опустошаем поля данных, в правые указатели заносим индексы следующих строк
             for (int i = 0; i < total_length; i++)
             {
-                records[i].L = 0;
-                records[i].Key = default;
+                table[i].L = 0;
+                table[i].Key = default;
+                table[i].R = i + 1;
             }
 
-            records[0].L = 2; //задаём указатель (индекс) на корень дерева
-            records[0].R = 2; //задаём указатель (индекс) на список свободных элементов
-            records[1].L = 0; //задаём счётчик количества существующих элементов
-            records[1].R = _length; //задаём размер таблицы
+            table[0].L = 2; //задаём указатель (индекс) на корень дерева
+            table[0].R = 2; //задаём указатель (индекс) на список свободных элементов
+            table[1].L = 0; //задаём счётчик количества существующих элементов
+            table[1].R = _length; //задаём размер таблицы
         }
 
-        //объявим индексатор для доступа к элементам
+        //объявим индексатор для доступа к элементам извне
         public Record this[int index]
         {
-            //действии при получении данных из вектора по индексу
+            //действия при получении данных по индексу
             get
             {
                 //выполняем проверку на выход индекса за границы массива
-                if (index < 0 || index > records[0].R - 1)
+                if (index < 0 || index > table[0].R - 1)
                     throw new IndexOutOfRangeException();
 
-                return records[index + 2];
+                return table[index + 2];
             }
 
-            //действии при задании данных в вектор по индексу
+            //действии при задании данных по индексу
             set
             {
-                //выполняем проверку на выход индекса за границы вектора, если выход обнаружен, выбрасываем ошибку, прерывающую программу
-                if (index < 0 || index > records[0].R - 1)
+                //выполняем проверку на выход индекса за границы массива
+                if (index < 0 || index > table[0].R - 1)
                     throw new IndexOutOfRangeException();
 
                 //использовано выражение, аналогичное описанному выше, только теперь значение задаётся
-                records[index + 2] = value;
+                table[index + 2] = value;
             }
         }
 
-        public void Add(T Key, int L, int R)
+        public void Add(T Key)
         {
+            int search = Search(Key, table[0].L);
 
-        }
-
-        private void Search(T searchKey)
-        {
-            for (int i = 0; i < records[1].R; i++)
+            if (search != -1)
             {
-                if (searchKey.Equals(this[i].Key))
-                {
+                if (search > 0)
+                    table[search - 1].L = search;
 
-                } 
-                else
-                {
+                table[0].R = table[search].R;
 
-                }
+                table[search].Key = Key;
+                table[search].R = table[0].R;
+                table[search].L = table[0].R;
+
+                table[1].L += 1;
+            } else
+            {
+                Console.WriteLine("Элемент с таким ключом уже существует!");
             }
+        }
+
+        private int Search(T searchKey, int rootIndex)
+        {
+            int result = -1;
+
+            if(searchKey.Equals(table[rootIndex].Key))
+            {
+                return rootIndex;
+            } 
+            else
+            {
+                Search(searchKey, table[rootIndex].L);
+                Search(searchKey, table[rootIndex].R);
+            }
+
+            return result;
+        }
+
+        private int NodeState(int index)
+        {
+            if ()
         }
     }
 }

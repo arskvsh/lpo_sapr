@@ -7,10 +7,10 @@ namespace LPO_SAPR
     {
         static void Main(string[] args)
         {
-            //инициализируем древовидную таблицу с 10 свободными слотами под записи и данными целочисленного типа.
+            //инициализируем древовидную таблицу с 10 свободными местами под записи.
             ArsTreeTable<int> treetable = new ArsTreeTable<int>(10);
 
-            treetable[0].L = 1;
+            treetable.Add(1);
 
         }
     }
