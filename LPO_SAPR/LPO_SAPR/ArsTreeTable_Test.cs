@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data.Common;
 using System.Text;
 
 namespace LPO_SAPR
@@ -10,8 +11,22 @@ namespace LPO_SAPR
             //инициализируем древовидную таблицу с 10 свободными местами под записи.
             ArsTreeTable<int> treetable = new ArsTreeTable<int>(10);
 
-            treetable.Add(1);
+            //проверяем, что таблица создалась, заодно выведем её длину
+            if (treetable != null)
+                Console.WriteLine("Древовидная таблица создана! Длина: " + treetable.Length);
 
+            //внесём несколько элементов
+            treetable.Add(5);
+            treetable.Add(3);
+            treetable.Add(4);
+            treetable.Add(6);
+            treetable.Add(1);
+            treetable.Add(2);
+
+            //выведем таблицу в консоль
+            treetable.Show();
+
+            treetable.Add(5);
         }
     }
 }
