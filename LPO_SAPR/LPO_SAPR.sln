@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30011.22
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LPO_SAPR", "LPO_SAPR\LPO_SAPR.csproj", "{C8D39FF3-3E1A-4020-B709-9587FA4F6ECD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LPO_SAPR", "LPO_SAPR\LPO_SAPR.csproj", "{C8D39FF3-3E1A-4020-B709-9587FA4F6ECD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

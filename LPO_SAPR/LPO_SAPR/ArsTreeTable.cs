@@ -5,16 +5,15 @@ using System.Text;
 using System.Runtime.InteropServices;
 using System.ComponentModel.Design.Serialization;
 using System.Security.Cryptography.X509Certificates;
+using System.Threading.Tasks.Dataflow;
 
 namespace LPO_SAPR
 {
     //объявляем класс древовидной таблицы
-    //требование к типу при объявлении - IComparable (сравнимый), т.к. в бинарном дереве поиска нужно сравнение ключей
+    //требование к типу при объявлении - IComparable (сравнимый), т.к. в бинарном дереве поиска необходимо производить сравнение ключей
     public unsafe class ArsTreeTable<T> where T : IComparable
     {
         //В C# записи могут быть представлены структурой "структура"
-        //Создадим запись для элемента древовидной таблицы, причём сериализуемую (чтобы потом записать в файл фрагмент памяти)
-        [Serializable]
         public struct Record
         {
             private int lptr; //левый указатель - индекс массива
@@ -65,6 +64,7 @@ namespace LPO_SAPR
                 table[i].R = i + 1;
             }
 
+            table[0].L = 2;
             table[0].R = 2; //задаём указатель (индекс) на список свободных элементов
             table[1].L = 0; //задаём счётчик количества существующих элементов
             table[1].R = total_length; //задаём размер таблицы
@@ -90,34 +90,23 @@ namespace LPO_SAPR
                 throw new Exception("У вас нет доступа к прямому изменению таблицы!");
             }
         }
+
+        //публичная функция добавления элемента
         public void Add(T Key)
         {
             //если таблица не заполнена
             if (table[1].L < table[1].R - 2)
             {
-                //ищем подходящее j в списке свободных элементов
-                //т.к. при удалении элемента за ним могут следовать занятые, нужно проверять, пусты ли ключи в списке свободных элементов
-                int j;
-                for (j = table[0].R; j < table[1].R; j++)
-                {
-                    //проверяем, пуст ли ключ записи с индексом j, если да, выбираем это j
-                    if (table[j].Key.Equals(default(T)))
-                    {
-                        break;
-                    }
-                }
-
-                //если таблица не пуста, запускаем рекурсивное внесение элемента
                 if (table[1].L > 0)
                 {
-                    //запускаем рекурсивную функцию поиска места для указателя на новый элемент
+                    //запускаем рекурсивную функцию поиска и добавления нового элемента
                     //если возвращено -1, то выбрасываем сообщение, что элемент с таким ключом уже есть
-                    if (AddRecursive(Key, 2, j) == -1)
+                    if (Add_R(Key, table[0].L, table[0].R) == -1)
                         Console.WriteLine("Элемент с ключом {0} уже есть!", Key);
                 }
                 //если пуста, без проверок создаём корень дерева
                 else
-                    AddToTable(Key, j);
+                    AddToTable(Key, table[0].R);
             } else
             {
                 Console.WriteLine("Таблица переполнена!");
@@ -125,7 +114,7 @@ namespace LPO_SAPR
         }
 
         //рекурсивная функция поиска места для указателя на новый элемент
-        private int AddRecursive(T Key, int rootIndex, int j)
+        private int Add_R(T Key, int rootIndex, int j)
         {
             //если такой ключ уже есть, возвращаем -1
             if (Key.CompareTo(table[rootIndex].Key) == 0)
@@ -143,7 +132,7 @@ namespace LPO_SAPR
                 }
                 //иначе ищем место для указателя на j дальше
                 else
-                    AddRecursive(Key, table[rootIndex].L, j);
+                    Add_R(Key, table[rootIndex].L, j);
             }
             //аналогично для ситуации, когда вставляемый ключ больше обходимого
             else if (Key.CompareTo(table[rootIndex].Key) > 0)
@@ -154,7 +143,7 @@ namespace LPO_SAPR
                     AddToTable(Key, j);
                 }
                 else
-                    AddRecursive(Key, table[rootIndex].R, j);
+                    Add_R(Key, table[rootIndex].R, j);
             }
             return 1;
         }
@@ -162,6 +151,10 @@ namespace LPO_SAPR
         //функция, производящая специфические для работы с таблицей операции при добавлении нового элемента
         private void AddToTable(T Key, int j)
         {
+            //если дерево пусто, обновляем указатель на корень дерева
+            if (table[1].L == 0)
+                table[0].L = j;
+
             //меняем указатель на список свободных элементов
             table[0].R = table[j].R;
 
@@ -179,20 +172,42 @@ namespace LPO_SAPR
         {
             if (table[1].L > 0)
             {
-                int j = Search(Key);
+                //находим удаляемый элемент и его родителя, записываем в поля
+                (int, int) srch = Search(Key);
+                int j = srch.Item1;
+                int p = srch.Item2;
 
                 if (j == -1)
                 {
                     Console.WriteLine("Такого элемента не существует!");
                 } else
                 {
+                    //производим служебные операции по удалению элемента из таблицы
+                    RemoveFromTable(j, p);
+                    //проверяем, сколько потомков у удаляемого элемента
                     if (table[j].R == 0 && table[j].L == 0)
                     {
-                        RemoveFromTable(j);
-                    }
-                    if (table[j].L != 0)
+                        //обнуляем указатель в родителе на текущий элемент
+                        if (table[p].L == j)
+                            table[p].L = 0;
+                        else
+                            table[p].R = 0;
+                    } else
                     {
-
+                        if (table[j].L != 0)
+                        {
+                            if (table[p].L == j)
+                                table[p].L = 0;
+                            else
+                                table[p].R = 0;
+                        }
+                        if (table[j].L != 0)
+                        {
+                            if (table[p].L == j)
+                                table[p].L = 0;
+                            else
+                                table[p].R = 0;
+                        }
                     }
                 }
             }
@@ -202,76 +217,100 @@ namespace LPO_SAPR
             }
         }
 
-        private void ReplacePtrRecursive(int rootIndex, int ptrToReplace, int newPtr)
+        //функция, производящая специфические для работы с таблицей операции при удалении элемента
+        private void RemoveFromTable(int j, int p)
         {
-            //если поданный (возврат индекса, поиск по левому или правому поддереву)
-            if (table[rootIndex].L != 0)
-            {
-
-            }
-            if (table[rootIndex].R != 0)
-            {
-
-            }
-        }
-
-        private void RemoveFromTable(int j)
-        {
+            //уменьшаем счётчик занятых элементов
             table[1].L -= 1;
 
+            //переносим текущий указатель на список свободных элементов в указатель на следующий элемент
             table[j].R = table[0].R;
+
+            //заносим индекс текущего элемента в указатель на список свободных элементов
             table[0].R = j;
-            table[j].L = 0;
-            table[j].Key = default;
         }
 
-        public int Search(T searchKey)
+        //функция поиска, возвращающая индекс найденного элемента и индекс его родителя (понадобится при удалении элементов)
+        private (int result, int parent) Search(T searchKey)
         {
             //если таблица не пуста, запускаем рекурсивный поиск начиная с корня дерева
             if (table[1].L > 0)
-                return SearchRecursive(searchKey, 2);
+                return Search_R(searchKey, table[0].L, -1);
             //или возвращаем -1
-            return -1;
+            return (-1, -1);
         }
 
         //рекурсивная функция поиска по древовидной таблице
-        private int SearchRecursive(T searchKey, int rootIndex)
+        private (int result, int parent) Search_R(T searchKey, int rootIndex, int prevIndex)
         {
-            //если поданный (возврат индекса, поиск по левому или правому поддереву)
+            //если поданный индекс не нулевой, осуществляем возврат индекса, либо продолжение поиска по левому или правому поддереву
             if (rootIndex != 0)
             {
                 if (searchKey.CompareTo(table[rootIndex].Key) == 0)
                 {
-                    return rootIndex;
+                    return (rootIndex, prevIndex);
                 }
                 else if (searchKey.CompareTo(table[rootIndex].Key) < 0)
                 {
-                    return SearchRecursive(searchKey, table[rootIndex].L);
+                    return Search_R(searchKey, table[rootIndex].L, rootIndex);
                 }
                 else if (searchKey.CompareTo(table[rootIndex].Key) > 0)
                 {
-                    return SearchRecursive(searchKey, table[rootIndex].R);
+                    return Search_R(searchKey, table[rootIndex].R, rootIndex);
                 }
             }
-
-            return -1;
+            //если ничего не найдено, возвращаем -1
+            return (-1, -1);
         }
 
+        //функция обхода дерева
+        public void Traversal()
+        {
+            Console.WriteLine("\nОбход дерева:");
+            if (table[1].L > 0)
+                Traversal_R(table[0].L);
+        }
+
+        //рекурсивная функция обхода дерева
+        private void Traversal_R(int rootIndex)
+        {
+            //если поданный индекс не нулевой, выводим ключ и продолжаем обход по поддеревьям
+            if (rootIndex != 0)
+            {
+                Console.WriteLine("Ключ " + table[rootIndex].Key);
+                Traversal_R(table[rootIndex].L);
+                Traversal_R(table[rootIndex].R);
+            }
+        }
+
+        //функция показа содержимого структуры в табличном виде
         public void Show()
         {
+            Console.WriteLine("------");
             for (int i = 0; i < table[1].R; i++)
             {
-                Console.WriteLine(table[i].L + " " + table[i].Key + " " + table[i].R);
+                Console.WriteLine("["+i+"] " + table[i].L + " " + table[i].Key + " " + table[i].R);
                 if(i == 1)
                     Console.WriteLine("------");
             }
+            Console.WriteLine("------");
         }
 
-        public int Length
+        //свойство, возвращающее вместимость таблицы
+        public int Capacity
         {
             get
             {
                 return table[1].R - 3;
+            }
+        }
+
+        //свойство, возвращающее количество занятых элементов таблицы
+        public int Count
+        {
+            get
+            {
+                return table[1].L;
             }
         }
     }
