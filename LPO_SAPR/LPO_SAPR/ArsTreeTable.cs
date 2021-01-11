@@ -1,11 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Runtime.InteropServices;
-using System.ComponentModel.Design.Serialization;
-using System.Security.Cryptography.X509Certificates;
-using System.Threading.Tasks.Dataflow;
+using System.IO;
 
 namespace LPO_SAPR
 {
@@ -57,14 +51,13 @@ namespace LPO_SAPR
             table = new Record[total_length]; //инициализируем массив
 
             //обнуляем все левые указатели и опустошаем поля данных, в правые указатели заносим индексы следующих строк
-            for (int i = 0; i < total_length; i++)
+            for (int i = 0; i < total_length - 1; i++)
             {
                 table[i].L = 0;
                 table[i].Key = default;
                 table[i].R = i + 1;
             }
 
-            table[0].L = 2;
             table[0].R = 2; //задаём указатель (индекс) на список свободных элементов
             table[1].L = 0; //задаём счётчик количества существующих элементов
             table[1].R = total_length; //задаём размер таблицы
@@ -83,20 +76,38 @@ namespace LPO_SAPR
                 return table[index + 2];
             }
 
-            //действии при задании данных по индексу
+            //действие при задании данных по индексу
             //поскольку изменения полей вручную, минуя управляющие алгоритмы таблицы, может нарушить работу таблицы, запрещаем их изменение
             set
             {
-                throw new Exception("У вас нет доступа к прямому изменению таблицы!");
+                throw new AccessViolationException();
+            }
+        }
+
+        //свойство, возвращающее вместимость таблицы
+        public int Capacity
+        {
+            get
+            {
+                return table[1].R - 3;
+            }
+        }
+
+        //свойство, возвращающее количество занятых элементов таблицы
+        public int Count
+        {
+            get
+            {
+                return table[1].L;
             }
         }
 
         //публичная функция добавления элемента
         public void Add(T Key)
         {
-            //если таблица не заполнена
-            if (table[1].L < table[1].R - 2)
+            if (table[1].L < table[1].R - 3)
             {
+                //если таблица не заполнена
                 if (table[1].L > 0)
                 {
                     //запускаем рекурсивную функцию поиска и добавления нового элемента
@@ -182,8 +193,6 @@ namespace LPO_SAPR
                     Console.WriteLine("Такого элемента не существует!");
                 } else
                 {
-                    //производим служебные операции по удалению элемента из таблицы
-                    RemoveFromTable(j, p);
                     //проверяем, сколько потомков у удаляемого элемента
                     if (table[j].R == 0 && table[j].L == 0)
                     {
@@ -194,21 +203,26 @@ namespace LPO_SAPR
                             table[p].R = 0;
                     } else
                     {
+                        //если левый указатель не нуль, переносим указатель в родителя
                         if (table[j].L != 0)
                         {
                             if (table[p].L == j)
-                                table[p].L = 0;
+                                table[p].L = table[j].L;
                             else
-                                table[p].R = 0;
+                                table[p].R = table[j].L;
                         }
-                        if (table[j].L != 0)
+                        //если правый указатель не нуль, переносим указатель в родителя
+                        if (table[j].R != 0)
                         {
-                            if (table[p].L == j)
-                                table[p].L = 0;
+                            if (table[p].L != j)
+                                table[p].L = table[j].R;
                             else
-                                table[p].R = 0;
+                                table[p].R = table[j].R;
                         }
                     }
+
+                    //производим служебные операции по удалению элемента из таблицы
+                    RemoveFromTable(j, p);
                 }
             }
             else
@@ -254,7 +268,7 @@ namespace LPO_SAPR
                 {
                     return Search_R(searchKey, table[rootIndex].L, rootIndex);
                 }
-                else if (searchKey.CompareTo(table[rootIndex].Key) > 0)
+                else
                 {
                     return Search_R(searchKey, table[rootIndex].R, rootIndex);
                 }
@@ -266,9 +280,13 @@ namespace LPO_SAPR
         //функция обхода дерева
         public void Traversal()
         {
-            Console.WriteLine("\nОбход дерева:");
             if (table[1].L > 0)
+            {
+                Console.WriteLine("Обход дерева:");
                 Traversal_R(table[0].L);
+            }
+            else
+                Console.WriteLine("\nТаблица пуста!");
         }
 
         //рекурсивная функция обхода дерева
@@ -283,35 +301,58 @@ namespace LPO_SAPR
             }
         }
 
+        //функция сохранения в файл
+        public void WriteToFile(string filename)
+        {
+            //создаём поток записи файла
+            using (StreamWriter file = new StreamWriter(@"A:\hobby\vuz\lpo\" + filename + ".txt", false))
+            {
+                //сохраняем записи в файл построчно
+                for (int i = 0; i < table[1].R; i++)
+                {
+                    file.WriteLine(table[i].L + " " + table[i].Key + " " + table[i].R);
+                }
+            }
+        }
+
+        //функция считывания из файла
+        public void ReadFromFile(string filename)
+        {
+            //создаём поток чтения файла
+            using (StreamReader file = new StreamReader(@"A:\hobby\vuz\lpo\" + filename + ".txt"))
+            {
+                //считываем длину таблицы из правого указателя первой строки в файле
+                string firstStr = file.ReadLine();
+                int length = Int32.Parse(file.ReadLine().Split(' ')[2]);
+
+                //возвращаем буфер в начало
+                file.DiscardBufferedData();
+                file.BaseStream.Seek(0, System.IO.SeekOrigin.Begin);
+
+                //считываем все записи из файла и заносим их в основное поле таблицы
+                Record[] records = new Record[length];
+                for (int i = 0; i < length; i++)
+                {
+                    string[] rec = file.ReadLine().Split(' ');
+                    records[i].L = Int32.Parse(rec[0]);
+                    records[i].Key = (T)Convert.ChangeType(rec[1], typeof(T));
+                    records[i].R = Int32.Parse(rec[2]);
+                }
+                table = records;
+            }
+        }
+
         //функция показа содержимого структуры в табличном виде
         public void Show()
         {
             Console.WriteLine("------");
             for (int i = 0; i < table[1].R; i++)
             {
-                Console.WriteLine("["+i+"] " + table[i].L + " " + table[i].Key + " " + table[i].R);
-                if(i == 1)
+                Console.WriteLine("[" + i + "] " + table[i].L + " " + table[i].Key + " " + table[i].R);
+                if (i == 1)
                     Console.WriteLine("------");
             }
             Console.WriteLine("------");
-        }
-
-        //свойство, возвращающее вместимость таблицы
-        public int Capacity
-        {
-            get
-            {
-                return table[1].R - 3;
-            }
-        }
-
-        //свойство, возвращающее количество занятых элементов таблицы
-        public int Count
-        {
-            get
-            {
-                return table[1].L;
-            }
         }
     }
 }
